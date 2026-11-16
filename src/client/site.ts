@@ -215,16 +215,15 @@ document.addEventListener("DOMContentLoaded", () => {
       }
 
       try {
-        const { error } = await supabase.auth.signInWithOtp({
-          email: currentEmail,
-          options: {
-            shouldCreateUser: true,
-            emailRedirectTo: `${window.location.origin}/app.html`
-          }
+        const res = await fetch("/api/auth/request-code", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ email: currentEmail })
         });
+        const result = await res.json();
 
-        if (error) {
-          notify(`Error: ${error.message}`);
+        if (!res.ok || !result.success) {
+          notify(`Error: ${result.error || "Failed to send code"}`);
           if (submitBtn) {
             submitBtn.disabled = false;
             submitBtn.textContent = "Send email code ";
@@ -235,8 +234,31 @@ document.addEventListener("DOMContentLoaded", () => {
         // Show OTP code entry step
         $("#signup-content")!.hidden = true;
         $("#signup-otp-step")!.hidden = false;
-        ($("#otp-code") as HTMLInputElement)?.focus();
-        notify(`Verification code sent to ${currentEmail}`);
+
+        const otpInput = $("#otp-code") as HTMLInputElement | null;
+        const otpDesc = $("#signup-otp-step .dialog-description");
+
+        if (result.method === "instant" && result.emailOtp) {
+          if (otpInput) otpInput.value = result.emailOtp;
+          if (otpDesc) {
+            otpDesc.innerHTML = `
+              <div style="background:var(--soft);border:1px solid var(--blue);border-radius:10px;padding:14px;margin-bottom:14px;text-align:left;">
+                <div style="font-size:12px;font-weight:600;text-transform:uppercase;letter-spacing:1px;color:var(--blue);margin-bottom:6px;">Instant Beta Code</div>
+                <div style="font-size:24px;font-weight:700;letter-spacing:4px;color:var(--ink);font-family:monospace;margin-bottom:8px;">${result.emailOtp}</div>
+                <p style="font-size:13px;color:var(--muted);margin:0 0 10px 0;">Email delivery is rate-limited on Supabase free tier. We generated your code automatically.</p>
+                ${result.actionLink ? `<a href="${result.actionLink}" class="button secondary" style="display:inline-block;padding:7px 14px;font-size:13px;text-decoration:none;">Or click to enter directly &rarr;</a>` : ''}
+              </div>
+            `;
+          }
+          notify("Instant login code generated!");
+        } else {
+          if (otpDesc) {
+            otpDesc.textContent = "Click the link in the email or enter your 6-digit code below.";
+          }
+          notify(`Sign-in code sent to ${currentEmail}`);
+        }
+
+        if (otpInput) otpInput.focus();
       } catch (err: unknown) {
         notify(`Failed to send code: ${err instanceof Error ? err.message : String(err)}`);
         if (submitBtn) {

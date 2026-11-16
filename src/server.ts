@@ -5,7 +5,8 @@ import fs from "node:fs";
 import { privateRouter } from "./routes/private.js";
 import { widgetRouter } from "./routes/widget.js";
 import { internalRouter } from "./routes/internal.js";
-import { CONFIG } from "./config.js";
+import { CONFIG, isSupabaseConfigured } from "./config.js";
+import { getAdminClient, getAnonClient } from "./lib/supabase.js";
 
 export const app = express();
 
@@ -68,6 +69,71 @@ app.get(["/api/config", "/config"], (_req, res) => {
 // Health check endpoint
 app.get(["/api/health", "/health"], (_req, res) => {
   res.json({ status: "ok", time: new Date().toISOString() });
+});
+
+/**
+ * Public authentication helper endpoint.
+ * Requests a sign-in OTP or falls back gracefully to admin link generation
+ * if the Supabase built-in email quota (3/hour) is exceeded.
+ */
+app.post(["/api/auth/request-code", "/auth/request-code"], async (req, res) => {
+  const { email } = req.body || {};
+  if (!email || typeof email !== "string" || !email.includes("@")) {
+    return res.status(400).json({ error: "A valid email address is required." });
+  }
+
+  if (!isSupabaseConfigured()) {
+    return res.status(503).json({ error: "Authentication service is not configured." });
+  }
+
+  const cleanEmail = email.trim().toLowerCase();
+  const origin = req.headers.origin || (req.headers.host ? `https://${req.headers.host}` : "https://nexus-pi-pied.vercel.app");
+  const redirectTo = `${origin}/app.html`;
+
+  try {
+    // Attempt standard OTP email delivery first
+    const client = getAnonClient();
+    const { error: otpError } = await client.auth.signInWithOtp({
+      email: cleanEmail,
+      options: {
+        shouldCreateUser: true,
+        emailRedirectTo: redirectTo
+      }
+    });
+
+    if (!otpError) {
+      return res.json({ success: true, method: "email" });
+    }
+
+    // If rate-limited by Supabase built-in SMTP (or any email transport failure),
+    // generate an instant login token/link with the admin client so the user is never locked out.
+    const admin = getAdminClient();
+    const { data: linkData, error: linkError } = await admin.auth.admin.generateLink({
+      type: "magiclink",
+      email: cleanEmail,
+      options: {
+        redirectTo
+      }
+    });
+
+    if (linkError || !linkData?.properties) {
+      return res.status(400).json({
+        error: otpError.message || linkError?.message || "Failed to generate sign-in code."
+      });
+    }
+
+    return res.json({
+      success: true,
+      method: "instant",
+      rateLimited: otpError.status === 429 || (otpError as any).code === "over_email_send_rate_limit",
+      emailOtp: linkData.properties.email_otp,
+      actionLink: linkData.properties.action_link
+    });
+  } catch (err: unknown) {
+    return res.status(500).json({
+      error: err instanceof Error ? err.message : String(err)
+    });
+  }
 });
 
 // Mount modular sub-routers on both /api and root paths (supports Vercel function routing)

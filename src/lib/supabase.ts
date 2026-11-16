@@ -23,6 +23,16 @@ export function getAdminClient(): SupabaseClient {
 }
 
 /**
+ * Returns a public anon Supabase client.
+ */
+export function getAnonClient(): SupabaseClient {
+  if (!isSupabaseConfigured()) {
+    throw new Error("Supabase is not configured.");
+  }
+  return createClient(CONFIG.SUPABASE_URL, CONFIG.SUPABASE_ANON_KEY);
+}
+
+/**
  * Creates a scoped Supabase client with the user's JWT access token.
  * Enforces RLS based on the user's identity.
  */
