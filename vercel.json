@@ -1,16 +1,12 @@
 {
   "rewrites": [
     {
-      "source": "/api/(.*)",
-      "destination": "/api/index"
-    },
-    {
       "source": "/app",
       "destination": "/app.html"
     }
   ],
   "functions": {
-    "api/index.ts": {
+    "api/**": {
       "memory": 1024,
       "maxDuration": 60
     }
