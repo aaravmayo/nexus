@@ -51,7 +51,7 @@ app.use(cors({
  * Public browser-safe configuration endpoint.
  * Returns only public Supabase settings and optional demo ID. Never exposes private secrets!
  */
-app.get("/api/config", (_req, res) => {
+app.get(["/api/config", "/config"], (_req, res) => {
   res.json({
     supabaseUrl: CONFIG.SUPABASE_URL,
     supabaseAnonKey: CONFIG.SUPABASE_ANON_KEY,
@@ -65,15 +65,19 @@ app.get("/api/config", (_req, res) => {
   });
 });
 
-// Mount modular sub-routers
-app.use("/api", privateRouter);
-app.use("/api/widget", widgetRouter);
-app.use("/api/internal", internalRouter);
-
 // Health check endpoint
-app.get("/api/health", (_req, res) => {
+app.get(["/api/health", "/health"], (_req, res) => {
   res.json({ status: "ok", time: new Date().toISOString() });
 });
+
+// Mount modular sub-routers on both /api and root paths (supports Vercel function routing)
+app.use("/api/widget", widgetRouter);
+app.use("/widget", widgetRouter);
+app.use("/api/internal", internalRouter);
+app.use("/internal", internalRouter);
+app.use("/api", privateRouter);
+app.use("/workspaces", privateRouter);
+app.use("/assistants", privateRouter);
 
 // Static pages routing fallback
 app.get("/", (_req, res) => {
