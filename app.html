@@ -1,0 +1,516 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Nexus — Workspace Dashboard</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,400..700;1,9..40,400..700&family=Newsreader:ital,opsz,wght@1,6..72,400;1,6..72,500&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #f8fafc;
+      --card: #ffffff;
+      --card-alt: #f1f5f9;
+      --border: #e2e8f0;
+      --border-dark: #cbd5e1;
+      --text: #0f172a;
+      --text-muted: #64748b;
+      --accent: #2563eb;
+      --accent-hover: #1d4ed8;
+      --accent-light: #eff6ff;
+      --danger: #dc2626;
+      --danger-light: #fef2f2;
+      --success: #16a34a;
+      --success-light: #f0fdf4;
+      --warning: #d97706;
+      --warning-light: #fffbeb;
+      --radius: 12px;
+      --radius-sm: 8px;
+    }
+
+    [data-theme="dark"] {
+      --bg: #0b0f19;
+      --card: #131b2e;
+      --card-alt: #0f172a;
+      --border: #1e293b;
+      --border-dark: #334155;
+      --text: #f1f5f9;
+      --text-muted: #94a3b8;
+      --accent: #3b82f6;
+      --accent-hover: #2563eb;
+      --accent-light: #172554;
+      --danger: #ef4444;
+      --danger-light: #450a0a;
+      --success: #22c55e;
+      --success-light: #052e16;
+      --warning: #f59e0b;
+      --warning-light: #451a03;
+    }
+    [data-theme="dark"] .form-control {
+      background: #0b0f19;
+      color: #f1f5f9;
+      border-color: #334155;
+    }
+    [data-theme="dark"] table.data-table th {
+      background: #0f172a;
+      color: #94a3b8;
+    }
+    [data-theme="dark"] .btn-secondary {
+      background: #131b2e;
+      color: #f1f5f9;
+      border-color: #334155;
+    }
+    [data-theme="dark"] .btn-secondary:hover {
+      background: #1e293b;
+    }
+    [data-theme="dark"] .nav-item:hover {
+      background: rgba(255, 255, 255, 0.05);
+    }
+
+    .theme-toggle {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+      border: 1px solid var(--border-dark);
+      background: var(--card);
+      color: var(--text-muted);
+      cursor: pointer;
+      transition: all 0.2s ease;
+      flex-shrink: 0;
+    }
+    .theme-toggle:hover {
+      color: var(--text);
+      border-color: var(--accent);
+      transform: scale(1.05);
+    }
+    [data-theme="dark"] .theme-toggle {
+      background: #131b2e;
+      border-color: #334155;
+      color: #94a3b8;
+    }
+    [data-theme="dark"] .theme-toggle:hover {
+      color: #f1f5f9;
+      border-color: #3b82f6;
+    }
+    [data-theme="dark"] .theme-icon-moon { display: none !important; }
+    [data-theme="dark"] .theme-icon-sun { display: block !important; }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: "DM Sans", system-ui, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      line-height: 1.5;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+    header {
+      background: var(--card);
+      border-bottom: 1px solid var(--border);
+      padding: 14px 24px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      position: sticky;
+      top: 0;
+      z-index: 50;
+    }
+    .brand-wrap { display: flex; align-items: center; gap: 12px; }
+    .brand { font-size: 19px; font-weight: 700; letter-spacing: -0.5px; color: var(--text); text-decoration: none; display: flex; align-items: center; gap: 8px; }
+    .brand-mark { display: inline-grid; grid-template-columns: 1fr 1fr; gap: 2px; width: 14px; height: 14px; }
+    .brand-mark i { background: var(--accent); border-radius: 2px; }
+    .badge-beta { font-size: 11px; font-weight: 600; background: var(--accent-light); color: var(--accent); padding: 2px 8px; border-radius: 20px; text-transform: uppercase; letter-spacing: 0.5px; }
+    .user-info { display: flex; align-items: center; gap: 14px; font-size: 13px; }
+    .user-pill { background: var(--card-alt); padding: 4px 10px; border-radius: 20px; color: var(--text-muted); }
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      padding: 8px 14px;
+      font-size: 13px;
+      font-weight: 600;
+      border-radius: var(--radius-sm);
+      border: 1px solid transparent;
+      cursor: pointer;
+      text-decoration: none;
+      transition: all 0.15s ease;
+    }
+    .btn-primary { background: var(--accent); color: white; border-color: var(--accent); }
+    .btn-primary:hover { background: var(--accent-hover); }
+    .btn-secondary { background: var(--card); color: var(--text); border-color: var(--border-dark); }
+    .btn-secondary:hover { background: var(--card-alt); }
+    .btn-danger { background: var(--danger-light); color: var(--danger); border-color: #fca5a5; }
+    .btn-danger:hover { background: #fee2e2; }
+    .btn-sm { padding: 4px 8px; font-size: 12px; }
+    
+    .dashboard-layout { display: flex; flex: 1; max-width: 1300px; width: 100%; margin: 0 auto; padding: 24px; gap: 24px; }
+    aside.sidebar { width: 220px; flex-shrink: 0; }
+    nav.side-nav { display: flex; flex-direction: column; gap: 4px; }
+    .nav-item {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 10px 14px;
+      border-radius: var(--radius-sm);
+      color: var(--text-muted);
+      font-size: 14px;
+      font-weight: 500;
+      cursor: pointer;
+      border: 0;
+      background: transparent;
+      width: 100%;
+      text-align: left;
+    }
+    .nav-item:hover { color: var(--text); background: rgba(0,0,0,0.03); }
+    .nav-item.active { color: var(--accent); background: var(--accent-light); font-weight: 600; }
+    
+    main.content-area { flex: 1; min-width: 0; }
+    .panel { display: none; background: var(--card); border: 1px solid var(--border); border-radius: var(--radius); padding: 28px; }
+    .panel.active { display: block; }
+    .panel-heading { margin-bottom: 24px; padding-bottom: 16px; border-bottom: 1px solid var(--border); }
+    .panel-heading h1 { font-size: 20px; font-weight: 700; color: var(--text); margin-bottom: 4px; }
+    .panel-heading p { font-size: 13px; color: var(--text-muted); }
+
+    .form-group { margin-bottom: 20px; }
+    .form-group label { display: block; font-size: 13px; font-weight: 600; margin-bottom: 6px; color: var(--text); }
+    .form-group .hint { font-size: 12px; color: var(--text-muted); margin-top: 4px; }
+    .form-control {
+      width: 100%;
+      padding: 9px 12px;
+      font-size: 14px;
+      border: 1px solid var(--border-dark);
+      border-radius: var(--radius-sm);
+      background: var(--card);
+      color: var(--text);
+      font-family: inherit;
+    }
+    .form-control:focus { outline: 2px solid var(--accent); border-color: var(--accent); }
+    textarea.form-control { resize: vertical; min-height: 80px; }
+
+    .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+
+    .status-badge { display: inline-flex; align-items: center; gap: 4px; padding: 2px 8px; border-radius: 20px; font-size: 11px; font-weight: 600; text-transform: uppercase; }
+    .status-ready { background: var(--success-light); color: var(--success); }
+    .status-processing { background: var(--warning-light); color: var(--warning); }
+    .status-pending { background: var(--card-alt); color: var(--text-muted); }
+    .status-failed { background: var(--danger-light); color: var(--danger); }
+    .status-draft { background: var(--warning-light); color: var(--warning); }
+    .status-published { background: var(--success-light); color: var(--success); }
+
+    .card-box { border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 18px; margin-bottom: 20px; background: var(--card); }
+    .card-box h3 { font-size: 15px; font-weight: 600; margin-bottom: 8px; }
+
+    table.data-table { width: 100%; border-collapse: collapse; font-size: 13px; }
+    table.data-table th, table.data-table td { padding: 12px 14px; text-align: left; border-bottom: 1px solid var(--border); }
+    table.data-table th { background: var(--card-alt); font-weight: 600; color: var(--text-muted); font-size: 12px; }
+    table.data-table tr:hover td { background: rgba(0,0,0,0.01); }
+
+    .code-block {
+      background: #0f172a;
+      color: #f8fafc;
+      padding: 16px;
+      border-radius: var(--radius-sm);
+      font-family: monospace;
+      font-size: 13px;
+      overflow-x: auto;
+      white-space: pre-wrap;
+      word-break: break-all;
+      margin: 12px 0;
+    }
+
+    .usage-meter { display: flex; justify-content: space-between; align-items: center; padding: 12px 0; border-bottom: 1px solid var(--border); font-size: 13px; }
+    .usage-label { font-weight: 500; }
+    .usage-val { font-family: monospace; font-weight: 600; color: var(--accent); }
+
+    .toast {
+      position: fixed;
+      bottom: 24px;
+      right: 24px;
+      background: #0f172a;
+      color: white;
+      padding: 12px 18px;
+      border-radius: var(--radius-sm);
+      font-size: 13px;
+      display: none;
+      box-shadow: 0 10px 25px rgba(0,0,0,0.2);
+      z-index: 1000;
+    }
+    .toast.visible { display: block; animation: fadeIn 0.2s ease; }
+    @keyframes fadeIn { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: translateY(0); } }
+
+    @media (max-width: 768px) {
+      .dashboard-layout { flex-direction: column; padding: 16px; }
+      aside.sidebar { width: 100%; }
+      nav.side-nav { flex-direction: row; overflow-x: auto; }
+      .grid-2 { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <div class="brand-wrap">
+      <a class="brand" href="/">
+        <span class="brand-mark"><i></i><i></i><i></i><i></i></span> nexus
+      </a>
+      <span class="badge-beta">Free Beta</span>
+    </div>
+    <div class="user-info">
+      <button class="theme-toggle" id="theme-toggle" type="button" aria-label="Toggle dark mode" title="Toggle dark mode">
+        <svg class="icon theme-icon-moon" aria-hidden="true" viewBox="0 0 24 24" style="width:16px;height:16px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round;"><path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"/></svg>
+        <svg class="icon theme-icon-sun" aria-hidden="true" viewBox="0 0 24 24" style="display:none;width:16px;height:16px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round;"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41"/></svg>
+      </button>
+      <span class="user-pill" id="user-email-display">Loading...</span>
+      <button class="btn btn-secondary btn-sm" id="btn-logout">Sign out</button>
+    </div>
+  </header>
+
+  <div class="dashboard-layout">
+    <aside class="sidebar">
+      <nav class="side-nav">
+        <button class="nav-item active" data-tab="assistant">⚙️ Assistant Settings</button>
+        <button class="nav-item" data-tab="knowledge">📚 Knowledge & Docs</button>
+        <button class="nav-item" data-tab="preview">💬 Test & Preview</button>
+        <button class="nav-item" data-tab="install">🚀 Install Snippet</button>
+        <button class="nav-item" data-tab="conversations">📜 Conversations</button>
+        <button class="nav-item" data-tab="usage">📊 Quota & Usage</button>
+      </nav>
+    </aside>
+
+    <main class="content-area">
+      <!-- 1. Assistant Settings -->
+      <section class="panel active" id="tab-assistant">
+        <div class="panel-heading">
+          <h1>Assistant Customization</h1>
+          <p>Personalize your assistant's voice, branding, and allowed website origins.</p>
+        </div>
+
+        <form id="assistant-form">
+          <div class="grid-2">
+            <div class="form-group">
+              <label for="ast-name">Assistant Name</label>
+              <input class="form-control" id="ast-name" name="name" maxlength="80" required>
+            </div>
+            <div class="form-group">
+              <label for="ast-color">Brand Color (Hex)</label>
+              <input class="form-control" id="ast-color" name="brand_color" placeholder="#2563eb" pattern="^#([A-Fa-f0-9]{6}|[A-Fa-f0-9]{3})$" required>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label for="ast-welcome">Welcome Message</label>
+            <input class="form-control" id="ast-welcome" name="welcome_message" maxlength="500" required>
+            <p class="hint">The opening message your assistant greets visitors with.</p>
+          </div>
+
+          <div class="grid-2">
+            <div class="form-group">
+              <label for="ast-tone">Tone of Voice</label>
+              <input class="form-control" id="ast-tone" name="tone" placeholder="helpful, professional, friendly" maxlength="50">
+            </div>
+            <div class="form-group">
+              <label for="ast-fallback">Fallback / Support Contact Guidance</label>
+              <input class="form-control" id="ast-fallback" name="fallback_info" placeholder="Please email support@yourdomain.com for more help." maxlength="500">
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label for="ast-questions">Suggested Quick Questions (one per line, max 4)</label>
+            <textarea class="form-control" id="ast-questions" name="suggested_questions" rows="3" placeholder="How do I get started?&#10;What are your pricing plans?"></textarea>
+          </div>
+
+          <div class="form-group">
+            <label for="ast-origins">Allowed Website Origins (one per line)</label>
+            <textarea class="form-control" id="ast-origins" name="allowed_origins" rows="2" placeholder="https://yourwebsite.com&#10;http://localhost:3000"></textarea>
+            <p class="hint">Only pages on these origins can embed and query your published widget.</p>
+          </div>
+
+          <div class="card-box" style="margin-top:24px;">
+            <div style="display:flex; justify-content:space-between; align-items:center;">
+              <div>
+                <h3>Assistant Status</h3>
+                <p style="font-size:13px; color:var(--text-muted);" id="ast-status-desc">Current state: <strong id="ast-status-label">Draft</strong></p>
+              </div>
+              <button type="button" class="btn btn-secondary" id="btn-toggle-publish">Publish Assistant</button>
+            </div>
+          </div>
+
+          <button type="submit" class="btn btn-primary" id="btn-save-assistant">Save Changes</button>
+        </form>
+      </section>
+
+      <!-- 2. Knowledge -->
+      <section class="panel" id="tab-knowledge">
+        <div class="panel-heading">
+          <h1>Knowledge Ingestion</h1>
+          <p>Add website URLs, documents, or FAQs. Content is chunked and embedded using NVIDIA NIM.</p>
+        </div>
+
+        <div class="grid-2">
+          <!-- Add Website -->
+          <div class="card-box">
+            <h3>🌐 Crawl Public Website</h3>
+            <p class="hint" style="margin-bottom:12px;">Crawls up to 25 bounded pages from your domain without running scripts.</p>
+            <form id="crawl-form">
+              <div class="form-group">
+                <input class="form-control" id="crawl-url" type="url" placeholder="https://yourwebsite.com" required>
+              </div>
+              <button type="submit" class="btn btn-secondary btn-sm" id="btn-submit-crawl">Start Crawling</button>
+            </form>
+          </div>
+
+          <!-- Upload Document -->
+          <div class="card-box">
+            <h3>📄 Upload File</h3>
+            <p class="hint" style="margin-bottom:12px;">Direct upload text-based PDF, Markdown, or TXT (up to 10 MB).</p>
+            <input type="file" id="file-input" accept=".txt,.md,.pdf" style="display:none;">
+            <button type="button" class="btn btn-secondary btn-sm" id="btn-select-file">Choose Document</button>
+            <span id="file-selected-name" style="font-size:12px; margin-left:8px; color:var(--text-muted);"></span>
+            <button type="button" class="btn btn-primary btn-sm" id="btn-upload-file" style="display:none; margin-top:10px;">Upload & Ingest</button>
+          </div>
+        </div>
+
+        <!-- Add Text / FAQ -->
+        <div class="card-box">
+          <h3>📝 Paste FAQs / Q&A</h3>
+          <p class="hint" style="margin-bottom:12px;">Add questions and answers directly.</p>
+          <form id="faq-form">
+            <div class="grid-2">
+              <div class="form-group">
+                <input class="form-control" id="faq-q" placeholder="Question (e.g. What is your refund policy?)" required>
+              </div>
+              <div class="form-group">
+                <input class="form-control" id="faq-a" placeholder="Answer (e.g. We offer full refunds within 14 days.)" required>
+              </div>
+            </div>
+            <button type="submit" class="btn btn-secondary btn-sm">Add FAQ Pair</button>
+          </form>
+        </div>
+
+        <!-- Sources Table -->
+        <div style="margin-top:28px;">
+          <h3 style="font-size:16px; margin-bottom:12px;">Active Knowledge Sources</h3>
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>Title / Location</th>
+                <th>Type</th>
+                <th>Status</th>
+                <th>Characters</th>
+                <th>Chunks</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody id="sources-tbody">
+              <tr><td colspan="6" style="text-align:center; color:var(--text-muted);">No knowledge sources added yet.</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <!-- 3. Preview Chat -->
+      <section class="panel" id="tab-preview">
+        <div class="panel-heading">
+          <h1>Assistant Test Preview</h1>
+          <p>Test your assistant in authenticated preview mode. Answers are grounded in your ready knowledge.</p>
+        </div>
+
+        <div id="preview-widget-container" style="max-width:440px; margin: 0 auto; min-height:520px; border:1px solid var(--border); border-radius:16px; overflow:hidden;"></div>
+      </section>
+
+      <!-- 4. Install Snippet -->
+      <section class="panel" id="tab-install">
+        <div class="panel-heading">
+          <h1>Embed on Your Website</h1>
+          <p>Copy and paste this single script tag into the HTML of any website you own.</p>
+        </div>
+
+        <div class="card-box">
+          <h3>Your Single-Line Snippet</h3>
+          <p class="hint">Place this tag right before the closing <code>&lt;/body&gt;</code> tag on your website.</p>
+          <div class="code-block" id="snippet-code">&lt;script src="http://localhost:3000/nexus.js" data-assistant="" defer&gt;&lt;/script&gt;</div>
+          <button type="button" class="btn btn-primary" id="btn-copy-install-snippet">Copy Snippet</button>
+        </div>
+
+        <div class="card-box">
+          <h3>Origin Whitelisting Notice</h3>
+          <p style="font-size:13px; color:var(--text-muted); line-height:1.6;">
+            To protect your quota and embedding budget, cross-origin requests are rejected unless the embedding website origin is listed in your <strong>Allowed Website Origins</strong> under Assistant Settings.
+          </p>
+        </div>
+      </section>
+
+      <!-- 5. Conversations -->
+      <section class="panel" id="tab-conversations">
+        <div class="panel-heading">
+          <h1>Conversations & Transcripts</h1>
+          <p>Private visitor interactions. Transcripts are retained for 30 days under the beta policy.</p>
+        </div>
+
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>ID</th>
+              <th>Mode</th>
+              <th>Origin</th>
+              <th>Turns</th>
+              <th>Created</th>
+              <th>Action</th>
+            </tr>
+          </thead>
+          <tbody id="conv-tbody">
+            <tr><td colspan="6" style="text-align:center; color:var(--text-muted);">No conversations recorded yet.</td></tr>
+          </tbody>
+        </table>
+      </section>
+
+      <!-- 6. Usage -->
+      <section class="panel" id="tab-usage">
+        <div class="panel-heading">
+          <h1>Free Beta Usage & Limits</h1>
+          <p>Server-enforced monthly quotas per workspace and assistant ingestion bounds.</p>
+        </div>
+
+        <div class="card-box">
+          <div class="usage-meter">
+            <span class="usage-label">Monthly Conversations (UTC Calendar Month)</span>
+            <span class="usage-val" id="usage-conv">0 / 100</span>
+          </div>
+          <div class="usage-meter">
+            <span class="usage-label">Monthly User Messages (UTC Calendar Month)</span>
+            <span class="usage-val" id="usage-msg">0 / 1,000</span>
+          </div>
+          <div class="usage-meter">
+            <span class="usage-label">Max User Turns per Conversation</span>
+            <span class="usage-val">20 turns</span>
+          </div>
+          <div class="usage-meter">
+            <span class="usage-label">Active Extracted Characters</span>
+            <span class="usage-val" id="usage-chars">0 / 250,000</span>
+          </div>
+          <div class="usage-meter">
+            <span class="usage-label">Active Vector Chunks</span>
+            <span class="usage-val" id="usage-chunks">0 / 1,000</span>
+          </div>
+          <div class="usage-meter">
+            <span class="usage-label">Monthly Re-ingestion Budget</span>
+            <span class="usage-val" id="usage-ingest">0 / 1,000,000 chars</span>
+          </div>
+        </div>
+
+        <p style="font-size:12px; color:var(--text-muted);">
+          * Quotas reset on the 1st of every calendar month at 00:00 UTC. Deleting and re-ingesting content draws from the monthly re-ingestion budget.
+        </p>
+      </section>
+    </main>
+  </div>
+
+  <div class="toast" id="toast"></div>
+
+  <script type="module" src="./dashboard.js"></script>
+</body>
+</html>
