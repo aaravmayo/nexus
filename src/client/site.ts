@@ -68,17 +68,35 @@ async function initAuth(): Promise<void> {
     if (config.supabaseUrl && config.supabaseAnonKey) {
       supabase = createClient(config.supabaseUrl, config.supabaseAnonKey);
 
+      // Listen for auth state change (e.g. magic link redirect)
+      supabase.auth.onAuthStateChange((event, session) => {
+        if (session && (event === "SIGNED_IN" || event === "INITIAL_SESSION")) {
+          if (window.location.hash.includes("access_token") || window.location.search.includes("code")) {
+            window.location.href = "/app.html";
+            return;
+          }
+          $$("[data-signup], [data-mode='login']").forEach(btn => {
+            btn.textContent = "Go to Dashboard →";
+            btn.onclick = (e) => {
+              e.preventDefault();
+              e.stopPropagation();
+              window.location.href = "/app.html";
+            };
+          });
+        }
+      });
+
       // Check if session exists
       const { data: { session } } = await supabase.auth.getSession();
       if (session) {
         // Update header login buttons to Dashboard
         $$("[data-signup], [data-mode='login']").forEach(btn => {
           btn.textContent = "Go to Dashboard →";
-          btn.addEventListener("click", (e) => {
+          btn.onclick = (e) => {
             e.preventDefault();
             e.stopPropagation();
             window.location.href = "/app.html";
-          });
+          };
         });
       }
     }
@@ -200,7 +218,8 @@ document.addEventListener("DOMContentLoaded", () => {
         const { error } = await supabase.auth.signInWithOtp({
           email: currentEmail,
           options: {
-            shouldCreateUser: true
+            shouldCreateUser: true,
+            emailRedirectTo: `${window.location.origin}/app.html`
           }
         });
 

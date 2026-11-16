@@ -21017,15 +21017,31 @@ async function initAuth() {
     const config = await res.json();
     if (config.supabaseUrl && config.supabaseAnonKey) {
       supabase = createClient(config.supabaseUrl, config.supabaseAnonKey);
+      supabase.auth.onAuthStateChange((event, session2) => {
+        if (session2 && (event === "SIGNED_IN" || event === "INITIAL_SESSION")) {
+          if (window.location.hash.includes("access_token") || window.location.search.includes("code")) {
+            window.location.href = "/app.html";
+            return;
+          }
+          $$("[data-signup], [data-mode='login']").forEach((btn) => {
+            btn.textContent = "Go to Dashboard \u2192";
+            btn.onclick = (e) => {
+              e.preventDefault();
+              e.stopPropagation();
+              window.location.href = "/app.html";
+            };
+          });
+        }
+      });
       const { data: { session } } = await supabase.auth.getSession();
       if (session) {
         $$("[data-signup], [data-mode='login']").forEach((btn) => {
           btn.textContent = "Go to Dashboard \u2192";
-          btn.addEventListener("click", (e) => {
+          btn.onclick = (e) => {
             e.preventDefault();
             e.stopPropagation();
             window.location.href = "/app.html";
-          });
+          };
         });
       }
     }
@@ -21119,7 +21135,8 @@ document.addEventListener("DOMContentLoaded", () => {
         const { error } = await supabase.auth.signInWithOtp({
           email: currentEmail,
           options: {
-            shouldCreateUser: true
+            shouldCreateUser: true,
+            emailRedirectTo: `${window.location.origin}/app.html`
           }
         });
         if (error) {

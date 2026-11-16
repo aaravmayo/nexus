@@ -47,7 +47,23 @@ async function initDashboard(): Promise<void> {
   supabase = createClient(config.supabaseUrl, config.supabaseAnonKey);
 
   // 2. Validate user session
-  const { data: { session } } = await supabase.auth.getSession();
+  let { data: { session } } = await supabase.auth.getSession();
+  if (!session && (window.location.hash.includes("access_token") || window.location.search.includes("code"))) {
+    // Arriving from a magic link redirect; wait for token exchange
+    session = await new Promise<any>((resolve) => {
+      const { data: { subscription } } = supabase!.auth.onAuthStateChange((_event, sess) => {
+        if (sess) {
+          subscription.unsubscribe();
+          resolve(sess);
+        }
+      });
+      setTimeout(() => {
+        subscription.unsubscribe();
+        resolve(null);
+      }, 4000);
+    });
+  }
+
   if (!session) {
     window.location.href = "/";
     return;

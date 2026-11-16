@@ -757,15 +757,15 @@
 
     <div id="signup-otp-step" hidden>
       <h2>Check your inbox.</h2>
-      <p class="dialog-description">We sent a 6-digit sign-in code to your email. Enter it below to access your workspace.</p>
+      <p class="dialog-description">Click the <strong>Log In link</strong> in the email to enter instantly, or enter your sign-in code below.</p>
       <form id="otp-form">
         <div class="field">
-          <label for="otp-code">6-Digit verification code</label>
-          <input id="otp-code" name="otp" type="text" placeholder="123456" pattern="[0-9A-Za-z]{6,8}" autocomplete="one-time-code" maxlength="8" required style="font-size:20px;letter-spacing:4px;text-align:center;">
+          <label for="otp-code">Sign-in / verification code (optional if using link)</label>
+          <input id="otp-code" name="otp" type="text" placeholder="123456" pattern="[0-9A-Za-z]{6,8}" autocomplete="one-time-code" maxlength="8" style="font-size:20px;letter-spacing:4px;text-align:center;">
         </div>
         <button class="button primary dialog-submit" id="otp-verify-submit" type="submit">Verify & enter dashboard <svg class="icon" aria-hidden="true"><use href="#i-arrow"/></svg></button>
       </form>
-      <p class="dialog-note">Did not receive the code? Check spam or close to try again.</p>
+      <p class="dialog-note">Did not receive the email? Check spam or close to try again.</p>
     </div>
 
     <div id="signup-success" hidden>

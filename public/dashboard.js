@@ -20996,7 +20996,21 @@ async function initDashboard() {
     return;
   }
   supabase = createClient(config.supabaseUrl, config.supabaseAnonKey);
-  const { data: { session } } = await supabase.auth.getSession();
+  let { data: { session } } = await supabase.auth.getSession();
+  if (!session && (window.location.hash.includes("access_token") || window.location.search.includes("code"))) {
+    session = await new Promise((resolve) => {
+      const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, sess) => {
+        if (sess) {
+          subscription.unsubscribe();
+          resolve(sess);
+        }
+      });
+      setTimeout(() => {
+        subscription.unsubscribe();
+        resolve(null);
+      }, 4e3);
+    });
+  }
   if (!session) {
     window.location.href = "/";
     return;
