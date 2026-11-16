@@ -5,6 +5,7 @@
   "type": "module",
   "scripts": {
     "build": "node scripts/build.mjs",
+    "vercel-build": "node scripts/build.mjs",
     "dev": "tsx watch src/dev-server.ts",
     "start": "node dist/server.js",
     "typecheck": "tsc --noEmit",

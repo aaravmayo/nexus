@@ -1,11 +1,15 @@
 import express from "express";
 import cors from "cors";
+import path from "node:path";
+import fs from "node:fs";
 import { privateRouter } from "./routes/private.js";
 import { widgetRouter } from "./routes/widget.js";
 import { internalRouter } from "./routes/internal.js";
 import { CONFIG } from "./config.js";
 
 export const app = express();
+
+const publicDir = path.resolve(process.cwd(), "public");
 
 // Basic security middleware
 app.disable("x-powered-by");
@@ -27,6 +31,12 @@ app.use((_req, res, next) => {
   );
   next();
 });
+
+// Serve static files from public/ if present, fallback to process.cwd()
+if (fs.existsSync(publicDir)) {
+  app.use(express.static(publicDir));
+}
+app.use(express.static(process.cwd()));
 
 app.use(express.json({ limit: "4.5mb" })); // Vercel function body limit
 app.use(express.urlencoded({ extended: true }));
@@ -63,6 +73,31 @@ app.use("/api/internal", internalRouter);
 // Health check endpoint
 app.get("/api/health", (_req, res) => {
   res.json({ status: "ok", time: new Date().toISOString() });
+});
+
+// Static pages routing fallback
+app.get("/", (_req, res) => {
+  const publicIndex = path.join(publicDir, "index.html");
+  if (fs.existsSync(publicIndex)) {
+    return res.sendFile(publicIndex);
+  }
+  res.sendFile(path.resolve(process.cwd(), "index.html"));
+});
+
+app.get("/app", (_req, res) => {
+  const publicApp = path.join(publicDir, "app.html");
+  if (fs.existsSync(publicApp)) {
+    return res.sendFile(publicApp);
+  }
+  res.sendFile(path.resolve(process.cwd(), "app.html"));
+});
+
+app.get("/nexus.js", (_req, res) => {
+  const nexusPath = path.join(publicDir, "nexus.js");
+  if (fs.existsSync(nexusPath)) {
+    return res.sendFile(nexusPath);
+  }
+  res.sendFile(path.resolve(process.cwd(), "nexus.js"));
 });
 
 // Centralized error handler
